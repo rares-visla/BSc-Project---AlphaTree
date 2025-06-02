@@ -23,3 +23,9 @@ AlphaTree
 analysis.txt
 gmon.out
 AlphaTree
+images
+images/*
+maxtree3b.c
+pamiconnmvps.pdf
+.idea
+.idea/*

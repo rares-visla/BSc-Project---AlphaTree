@@ -1,11 +1,12 @@
 # ImageFileName=001_bw.png
 # ImageFileName=/home/jiwoo/2024/TIP/dataset
 # ImageFileName=/home/jiwoo/2024/TIP/dataset/001_S2A_MSIL2A_20241006T104921_N0511_R051_T31UES_20241006T151849-ql.png
-ImageFileName = KinhoEdgeBoosted.png
+ImageFileName = ./images/2ec83b5a-f1ad-4dae-bb33-773f1eee7923.png
+# ImageFileName = /mnt/c/Users/Rares/Desktop/Uni/3rdYear/Thesis/BSc_Project/images/2ec83b5a-f1ad-4dae-bb33-773f1eee7923.png
 LogFileName=test
-UseRandomlyGeneratedImages=0
-RandomlyGeneratedImageWidth=4000
-RandomlyGeneratedImageHeight=4000
+UseRandomlyGeneratedImages=1
+RandomlyGeneratedImageWidth=5
+RandomlyGeneratedImageHeight=5
 NumberOfChannels=1
 NumberOfThreads=1
 
@@ -36,11 +37,12 @@ NumberOfThreads=1
 # 16. FloodHierHeapQueueNoCache
 # 17. FloodHeapQueueNaiveNoCache
 # 18. FloodHierHeapQueuePar
-AlphaTreeAlgorithm=FloodHierHeapQueue
+AlphaTreeAlgorithm=FloodHierQueue
 
-BitDepth=32
+DissimilarityMetric=L1
+BitDepth=24
 UseTreeSizeEstimation=1
-Connectivity=8
+Connectivity=4
 NumberOfTestIterations=1
 ParameterInteger1=3
 ParameterInteger2=2

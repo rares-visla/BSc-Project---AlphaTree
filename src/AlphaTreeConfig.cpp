@@ -30,6 +30,8 @@ void AlphaTreeConfig::initialize(const std::string &filename_, const std::string
 }
 
 int AlphaTreeConfig::getAlphaTreeAlgorithmCode(std::string AlphaTreeAlgorithmName) {
+    std::cout << "\nalgoalgo: " << AlphaTreeAlgorithmName;
+    std::cout << "\nalgocode: " << AlgorithmNameToCode[AlphaTreeAlgorithmName];
     return AlgorithmNameToCode[AlphaTreeAlgorithmName];
 }
 

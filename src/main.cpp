@@ -31,8 +31,10 @@ int main(int argc, char **argv) {
     const auto &bitdepth = params.UseRandomlyGeneratedImages ? params.bitdepth : 16 * ch;
     const auto &nch = params.UseRandomlyGeneratedImages ? params.nchannels : ch;
     const auto &dMetric = params.dissimilarityMetric;
+    std::cout << "\naaaaaaaaaaaaaa: " << dMetric << "\n";
     const auto &conn = params.connectivity;
     const auto &algCode = params.alphaTreeAlgorithmCode;
+    std::cout << "\nalgo: " << algCode << "\n";
     const auto &nthr = params.numthreads;
     const auto &nitr = params.numitr;
     const auto &tse = params.tse;
@@ -120,7 +122,7 @@ int main(int argc, char **argv) {
                 tree.BuildAlphaTree(image.data(), height, width, nch, dMetric, conn, algCode, nthr, tse, fparam1,
                                     fparam2, iparam1);
 
-                const bool rgbFilter = true;
+                const bool rgbFilter = false;
                 if (rgbFilter) {
 
                     int sizeThr = 16;
@@ -150,7 +152,7 @@ int main(int argc, char **argv) {
         runtimes.push_back(runtime);
     }
 
-    if (runtimes.empty() == false) {
+    if (!runtimes.empty()) {
         double minRuntime = *std::min_element(runtimes.begin(), runtimes.end());
         double imgsize = (double)(width * height);
 
