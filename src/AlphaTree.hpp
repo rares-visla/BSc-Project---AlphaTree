@@ -12,6 +12,7 @@
 #include <radixsort_teeninga/sort/radix_sort_parallel.h>
 #include <radixsort_teeninga/sort/sort_item.h>
 #include <walltime.hpp>
+#include "feature_extraction/AlphaNodeFeatures.hpp"
 
 using namespace pmt;
 
@@ -74,6 +75,10 @@ template <class Pixel> class AlphaNode {
     Pixel maxPix = std::numeric_limits<Pixel>::min();
     ImgIdx parentIdx = ROOTIDX;
     ImgIdx _rootIdx = ROOTIDX;
+
+    //feature-related members
+    AlphaNodeFeatures features;
+    bool featuresComputed = false;
 
     AlphaNode() = default;
     AlphaNode(Pixel pixelVal, float alpha_, ImgIdx parentidx_ = ROOTIDX);
