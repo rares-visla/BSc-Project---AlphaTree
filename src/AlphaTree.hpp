@@ -82,7 +82,7 @@ template <class Pixel> class AlphaNode {
     double sumY = 0.0;
     double sumX2 = 0.0;
     double sumY2 = 0.0;
-    double momentOfInertia = 0.0;
+    double compactness = 0.0;
 
     //feature-related members
 //    AlphaNodeFeatures features;
@@ -104,8 +104,8 @@ template <class Pixel> class AlphaNode {
 
     bool operator<(const AlphaNode &other) const { return alpha < other.alpha; }
 
-//  private:
-//    void updateMomentOfInertia();
+  private:
+    void computeCompactness();
 };
 
 template <class Pixel> class AlphaTree {
@@ -218,7 +218,7 @@ template <class Pixel> class AlphaTree {
     void connectPix2Node(ImgIdx pidx, Pixel pix_val, ImgIdx iNode, Pixel level);
     void connectPix2Node(ImgIdx pidx, Pixel pix_val, ImgIdx iNode);
     void connectPix2Node0(ImgIdx pidx, Pixel pix_val, ImgIdx iNode, Pixel level);
-    void connectPix2NodeWithCoords(ImgIdx pidx, Pixel pix_val, ImgIdx iNode);
+    void connectPix2NodeWithCoords(const Pixel *img, ImgIdx pidx, Pixel pix_val, ImgIdx iNode);
     ImgIdx NewAlphaNode();
     ImgIdx NewAlphaNode(Pixel level, AlphaNode<Pixel> *pCopy);
     ImgIdx NewAlphaNode1(double level, AlphaNode<Pixel> *pCopy);

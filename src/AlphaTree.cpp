@@ -41,12 +41,16 @@ template <class Pixel> void AlphaNode<Pixel>::add(AlphaNode *q) {
     this->minPix = _min(this->minPix, q->minPix);
     this->maxPix = _max(this->maxPix, q->maxPix);
 
+#if RGB_FILTER
+    this->rgb[0] += q->rgb[0];
+    this->rgb[1] += q->rgb[1];
+    this->rgb[2] += q->rgb[2];
+#endif
+
     this->sumX += q->sumX;
     this->sumY += q->sumY;
     this->sumX2 += q->sumX2;
     this->sumY2 += q->sumY2;
-
-//    this.updateMomentOfInertia();
 }
 
 template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
@@ -54,6 +58,7 @@ template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
     this->sumPix += (float)q.sumPix;
     this->minPix = _min(this->minPix, q.minPix);
     this->maxPix = _max(this->maxPix, q.maxPix);
+
 #if RGB_FILTER
     this->rgb[0] += q.rgb[0];
     this->rgb[1] += q.rgb[1];
@@ -71,6 +76,17 @@ template <class Pixel> void AlphaNode<Pixel>::add(const Pixel &pix_val) {
     this->sumPix += (float)pix_val;
     this->minPix = _min(this->minPix, pix_val);
     this->maxPix = _max(this->maxPix, pix_val);
+
+//#if RGB_FILTER
+//    this->rgb[0] += q.rgb[0];
+//    this->rgb[1] += q.rgb[1];
+//    this->rgb[2] += q.rgb[2];
+//#endif
+//
+//    this->sumX += q.sumX;
+//    this->sumY += q.sumY;
+//    this->sumX2 += q.sumX2;
+//    this->sumY2 += q.sumY2;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::addPixelWithCoords(const Pixel &pix_val, ImgIdx x, ImgIdx y) {
@@ -110,6 +126,24 @@ template <class Pixel> void AlphaNode<Pixel>::print(AlphaNode *_node, int headin
            "%d-%d    _rootIdx: %d\n",
            heading, (int)(this - _node), (double)this->alpha, (int)this->parentIdx, (int)this->area,
            (double)this->sumPix, (int)this->minPix, (int)this->maxPix, (int)this->_rootIdx);
+}
+
+template <class Pixel> void AlphaNode<Pixel>::computeCompactness() {
+    if (area == 1 || area == 0) compactness = 0;
+
+    double centroidX = sumX / area;
+    double centroidY = sumY / area;
+
+    //Central Moments
+    double mu20 = sumX2 - centroidX * sumX;
+    double mu02 = sumY2 - centroidY * sumY;
+
+    //Normalize by area
+    double area2 = pow(area, 2);
+    double eta20 = mu20 / area2;
+    double eta02 = mu02 / area2;
+
+    compactness = eta20 + eta02;
 }
 
 template <class Pixel>
@@ -1226,12 +1260,20 @@ template <class Pixel> void AlphaTree<Pixel>::connectPix2Node0(ImgIdx pidx, Pixe
     pNode->set(1, level, (double)pix_val, pix_val, pix_val);
 }
 
-template <class Pixel> void AlphaTree<Pixel>::connectPix2NodeWithCoords(ImgIdx pidx, Pixel pix_val, ImgIdx iNode) {
+template <class Pixel> void AlphaTree<Pixel>::connectPix2NodeWithCoords(const Pixel *img, ImgIdx pidx, Pixel pix_val, ImgIdx iNode) {
     ImgIdx x = pidx % _width;
     ImgIdx y = pidx / _width;
 
     _parentAry[pidx] = iNode;
     _node[iNode].addPixelWithCoords(pix_val, x, y);
+#if RGB_FILTER
+    if (_channel >= 3) {
+        ImgIdx imgSize = _height * _width;
+        _node[iNode].rgb[0] += img[pidx];
+        _node[iNode].rgb[1] += img[pidx + imgSize];
+        _node[iNode].rgb[2] += img[pidx + 2*imgSize];
+    }
+#endif
 }
 
 template <class Pixel> ImgIdx AlphaTree<Pixel>::NewAlphaNode() {
@@ -1955,6 +1997,9 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                 _node[iNode].sumY = y;
                 _node[iNode].sumX2 = x * x;
                 _node[iNode].sumY2 = y * y;
+                _node[iNode].rgb[0] = img[p];
+                _node[iNode].rgb[1] = img[p + imgSize];
+                _node[iNode].rgb[2] = img[p + 2*imgSize];
                 _node[iNode].parentIdx = stackTop;
                 _node[iNode]._rootIdx = ROOTIDX;
                 stackTop = iNode;
@@ -1979,13 +2024,16 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                     _node[iNode].sumY = y;
                     _node[iNode].sumX2 = x * x;
                     _node[iNode].sumY2 = y * y;
+                    _node[iNode].rgb[0] = img[p];
+                    _node[iNode].rgb[1] = img[p + imgSize];
+                    _node[iNode].rgb[2] = img[p + 2*imgSize];
 
                     _node[stackTop].add(_node + iNode);
                     _node[iNode].parentIdx = stackTop;
                     _node[iNode]._rootIdx = ROOTIDX;
                     _parentAry[p] = iNode;
                 } else
-                    connectPix2NodeWithCoords(p, img[p], stackTop);
+                    connectPix2NodeWithCoords(img, p, img[p], stackTop);
                 if (_node[stackTop].area == imgSize)
                     goto FLOOD_END;
             }
