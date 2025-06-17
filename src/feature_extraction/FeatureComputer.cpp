@@ -59,9 +59,9 @@ FeatureComputer<Pixel>::computeFeatures(const AlphaTree<Pixel>& tree, ImgIdx nod
         features.elongation = 2.0 * M_PI;
         return features;
     }
-
-    Moments moments = computeMoments(tree, nodeIdx);
-    computeElongation(moments, node.area, features);
+//
+//    Moments moments = computeMoments(tree, nodeIdx);
+//    computeElongation(moments, node.area, features);
     return features;
 }
 

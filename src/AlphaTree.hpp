@@ -68,7 +68,9 @@ template <class Pixel> class AlphaNode {
     float sumPix = 0.0;
 #if RGB_FILTER
     float rgb[3] = {
-        0.f,
+        0.0f,
+        0.0f,
+        0.0f
     };
 #endif
     Pixel minPix = std::numeric_limits<Pixel>::max();
@@ -76,9 +78,15 @@ template <class Pixel> class AlphaNode {
     ImgIdx parentIdx = ROOTIDX;
     ImgIdx _rootIdx = ROOTIDX;
 
+    double sumX = 0.0;
+    double sumY = 0.0;
+    double sumX2 = 0.0;
+    double sumY2 = 0.0;
+    double momentOfInertia = 0.0;
+
     //feature-related members
-    AlphaNodeFeatures features;
-    bool featuresComputed = false;
+//    AlphaNodeFeatures features;
+//    bool featuresComputed = false;
 
     AlphaNode() = default;
     AlphaNode(Pixel pixelVal, float alpha_, ImgIdx parentidx_ = ROOTIDX);
@@ -88,12 +96,16 @@ template <class Pixel> class AlphaNode {
     inline void add(AlphaNode *q);
     inline void add(const AlphaNode &q);
     inline void add(const Pixel &pix_val);
+    inline void addPixelWithCoords(const Pixel &pix_val, ImgIdx x, ImgIdx y);
     inline void copy(AlphaNode *q);
     inline void connect_to_parent(AlphaNode *pPar, ImgIdx iPar);
     void print(AlphaNode *_node);
     void print(AlphaNode *_node, int heading);
 
     bool operator<(const AlphaNode &other) const { return alpha < other.alpha; }
+
+//  private:
+//    void updateMomentOfInertia();
 };
 
 template <class Pixel> class AlphaTree {
@@ -206,6 +218,7 @@ template <class Pixel> class AlphaTree {
     void connectPix2Node(ImgIdx pidx, Pixel pix_val, ImgIdx iNode, Pixel level);
     void connectPix2Node(ImgIdx pidx, Pixel pix_val, ImgIdx iNode);
     void connectPix2Node0(ImgIdx pidx, Pixel pix_val, ImgIdx iNode, Pixel level);
+    void connectPix2NodeWithCoords(ImgIdx pidx, Pixel pix_val, ImgIdx iNode);
     ImgIdx NewAlphaNode();
     ImgIdx NewAlphaNode(Pixel level, AlphaNode<Pixel> *pCopy);
     ImgIdx NewAlphaNode1(double level, AlphaNode<Pixel> *pCopy);

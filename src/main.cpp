@@ -4,9 +4,13 @@
 #include <AlphaTree.hpp>
 #include <AlphaTreeConfig.hpp>
 #include <RandGenImage.hpp>
+#include "feature_extraction/FeatureComputer.hpp"
+#include <filesystem>
 
 // args: Filename, nchannels, numthreads, testimgsize, algorithmcode, bitdepth, tseflag
 int main(int argc, char **argv) {
+    bool fileExists = std::filesystem::exists("./images/image1.png");
+    std::cout << "fileExists: " << fileExists << std::endl;
     srand(time(NULL));
 
     const auto configFileName = argc < 2 ? "config.txt" : std::string(argv[1]);
@@ -34,6 +38,8 @@ int main(int argc, char **argv) {
     std::cout << "\naaaaaaaaaaaaaa: " << dMetric << "\n";
     const auto &conn = params.connectivity;
     const auto &algCode = params.alphaTreeAlgorithmCode;
+//  lock algCode to 4 for now (floodHierHeapQueue)
+//    algCode = 4;
     std::cout << "\nalgo: " << algCode << "\n";
     const auto &nthr = params.numthreads;
     const auto &nitr = params.numitr;
@@ -74,6 +80,26 @@ int main(int argc, char **argv) {
                 tree.BuildAlphaTree(image, height, width, nch, dMetric, conn, algCode, nthr, tse, fparam1, fparam2,
                                     iparam1);
                 tEnd = get_wall_time();
+                std::cout << "\n" << tree._curSize << " nodes\n" << std::endl;;
+//                for (ImgIdx i = 0; i < tree._curSize; i++) {
+//                    if (!tree._node[i].featuresComputed) {
+//                        tree._node[i].features = FeatureComputer<uint32_t>::computeFeatures(tree, i);
+//                        tree._node[i].featuresComputed = true;
+////                        std::cout << "Node " << i << " features:\n";
+////                        std::cout << "Area: " << tree._node[i].features.area << "\n";
+////                        std::cout << "Elongation: " << tree._node[i].features.elongation << "\n";
+////                        std::cout << "Mean Intensity: " << tree._node[i].features.meanIntensity << "\n";
+////                        std::cout << "Contrast: " << tree._node[i].features.contrast << "\n";
+//
+//                    }
+//                    if (tree._node[i].area > 25 && tree._node[i].alpha > 100) {
+//                        std::cout << "Node " << i << " features:\n";
+//                        std::cout << "Area: " << tree._node[i].features.area << "\n";
+//                        std::cout << "Elongation: " << tree._node[i].features.elongation << "\n";
+//                        std::cout << "Mean Intensity: " << tree._node[i].features.meanIntensity << "\n";
+//                        std::cout << "Contrast: " << tree._node[i].features.contrast << "\n";
+//                    }
+//                }
                 Free(image);
             } else if (bitdepth > 8) {
                 uint16_t *image = (uint16_t *)Malloc(width * height * nch * sizeof(uint16_t));

@@ -40,6 +40,13 @@ template <class Pixel> void AlphaNode<Pixel>::add(AlphaNode *q) {
     this->sumPix += (float)q->sumPix;
     this->minPix = _min(this->minPix, q->minPix);
     this->maxPix = _max(this->maxPix, q->maxPix);
+
+    this->sumX += q->sumX;
+    this->sumY += q->sumY;
+    this->sumX2 += q->sumX2;
+    this->sumY2 += q->sumY2;
+
+//    this.updateMomentOfInertia();
 }
 
 template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
@@ -52,6 +59,11 @@ template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
     this->rgb[1] += q.rgb[1];
     this->rgb[2] += q.rgb[2];
 #endif
+
+    this->sumX += q.sumX;
+    this->sumY += q.sumY;
+    this->sumX2 += q.sumX2;
+    this->sumY2 += q.sumY2;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::add(const Pixel &pix_val) {
@@ -59,6 +71,19 @@ template <class Pixel> void AlphaNode<Pixel>::add(const Pixel &pix_val) {
     this->sumPix += (float)pix_val;
     this->minPix = _min(this->minPix, pix_val);
     this->maxPix = _max(this->maxPix, pix_val);
+}
+
+template <class Pixel> void AlphaNode<Pixel>::addPixelWithCoords(const Pixel &pix_val, ImgIdx x, ImgIdx y) {
+    this->area++;
+    this->sumPix += (float)pix_val;
+    this->minPix = _min(this->minPix, pix_val);
+    this->maxPix = _max(this->maxPix, pix_val);
+
+    // Add moment computation
+    this->sumX += x;
+    this->sumY += y;
+    this->sumX2 += x * x;
+    this->sumY2 += y * y;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::copy(AlphaNode *q) {
@@ -1201,6 +1226,14 @@ template <class Pixel> void AlphaTree<Pixel>::connectPix2Node0(ImgIdx pidx, Pixe
     pNode->set(1, level, (double)pix_val, pix_val, pix_val);
 }
 
+template <class Pixel> void AlphaTree<Pixel>::connectPix2NodeWithCoords(ImgIdx pidx, Pixel pix_val, ImgIdx iNode) {
+    ImgIdx x = pidx % _width;
+    ImgIdx y = pidx / _width;
+
+    _parentAry[pidx] = iNode;
+    _node[iNode].addPixelWithCoords(pix_val, x, y);
+}
+
 template <class Pixel> ImgIdx AlphaTree<Pixel>::NewAlphaNode() {
     if (_curSize == _maxSize) {
         std::cout << "Reallocating...\n";
@@ -1810,6 +1843,7 @@ FLOOD_END:
 }
 
 template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
+    //FUNCTION TO USE
     Cache_Quad_Heapqueue<float> *queue;
 
     ImgIdx imgSize, dimgSize, nredges, x0;
@@ -1911,7 +1945,16 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                 Pixel pix_val = img[p];
                 currentLevel = queue->get_minlev();
                 iNode = NewAlphaNode();
+
+                ImgIdx x = p % _width;
+                ImgIdx y = p / _width;
+
+
                 _node[iNode].set(1, currentLevel, (float)pix_val, pix_val, pix_val);
+                _node[iNode].sumX = x;
+                _node[iNode].sumY = y;
+                _node[iNode].sumX2 = x * x;
+                _node[iNode].sumY2 = y * y;
                 _node[iNode].parentIdx = stackTop;
                 _node[iNode]._rootIdx = ROOTIDX;
                 stackTop = iNode;
@@ -1927,13 +1970,22 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                 if (currentLevel) {
                     Pixel pix_val = img[p];
                     iNode = NewAlphaNode();
+
+                    ImgIdx x = p % _width;
+                    ImgIdx y = p / _width;
+
                     _node[iNode].set(1, 0, (float)pix_val, pix_val, pix_val);
+                    _node[iNode].sumX = x;
+                    _node[iNode].sumY = y;
+                    _node[iNode].sumX2 = x * x;
+                    _node[iNode].sumY2 = y * y;
+
                     _node[stackTop].add(_node + iNode);
                     _node[iNode].parentIdx = stackTop;
                     _node[iNode]._rootIdx = ROOTIDX;
                     _parentAry[p] = iNode;
                 } else
-                    connectPix2Node(p, img[p], stackTop);
+                    connectPix2NodeWithCoords(p, img[p], stackTop);
                 if (_node[stackTop].area == imgSize)
                     goto FLOOD_END;
             }
@@ -2019,6 +2071,7 @@ void AlphaTree<Pixel>::PushNeighbors(ImgIdx p, uint8_t isAv, const Pixel *dimg, 
 }
 
 template <class Pixel> void AlphaTree<Pixel>::FloodHierarQueue(const Pixel *img) {
+    std::cout << "FloodHierarQueue!!!!!!!!!!!!!!!!!" << std::endl;
     const ImgIdx imgSize = _width * _height;
     const ImgIdx nredges = _width * (_height - 1) + (_width - 1) * _height +
                            ((_connectivity == 8) ? ((_width - 1) * (_height - 1) * 2) : 0);

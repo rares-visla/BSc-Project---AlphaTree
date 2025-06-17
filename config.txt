@@ -1,13 +1,13 @@
 # ImageFileName=001_bw.png
 # ImageFileName=/home/jiwoo/2024/TIP/dataset
 # ImageFileName=/home/jiwoo/2024/TIP/dataset/001_S2A_MSIL2A_20241006T104921_N0511_R051_T31UES_20241006T151849-ql.png
-ImageFileName = ./images/2ec83b5a-f1ad-4dae-bb33-773f1eee7923.png
-# ImageFileName = /mnt/c/Users/Rares/Desktop/Uni/3rdYear/Thesis/BSc_Project/images/2ec83b5a-f1ad-4dae-bb33-773f1eee7923.png
+# ImageFileName=C:\Users\Rares\Desktop\Uni\3rdYear\Thesis\BSc_Project\image1.tiff
+ImageFileName = ./images/image1.png
 LogFileName=test
-UseRandomlyGeneratedImages=1
-RandomlyGeneratedImageWidth=5
-RandomlyGeneratedImageHeight=5
-NumberOfChannels=1
+UseRandomlyGeneratedImages=0
+RandomlyGeneratedImageWidth=2000
+RandomlyGeneratedImageHeight=2000
+NumberOfChannels=3
 NumberOfThreads=1
 
 # List of algorithms

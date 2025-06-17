@@ -30,8 +30,8 @@ void AlphaTreeConfig::initialize(const std::string &filename_, const std::string
 }
 
 int AlphaTreeConfig::getAlphaTreeAlgorithmCode(std::string AlphaTreeAlgorithmName) {
-    std::cout << "\nalgoalgo: " << AlphaTreeAlgorithmName;
-    std::cout << "\nalgocode: " << AlgorithmNameToCode[AlphaTreeAlgorithmName];
+//    std::cout << "\nalgoalgo: " << AlphaTreeAlgorithmName;
+//    std::cout << "\nalgocode: " << AlgorithmNameToCode[AlphaTreeAlgorithmName];
     return AlgorithmNameToCode[AlphaTreeAlgorithmName];
 }
 
@@ -76,6 +76,8 @@ std::optional<AlphaTreeConfig::AlphaTreeParameters> AlphaTreeConfig::load(int ar
     params.randomGenImageWidth = getInteger("RandomlyGeneratedImageWidth");
     params.randomGenImageHeight = getInteger("RandomlyGeneratedImageHeight");
     params.alphaTreeAlgorithmCode = getAlphaTreeAlgorithmCode(getString("AlphaTreeAlgorithm"));
+    //lock alphaTreeAlgorithmCode to 4 for now (floodHierHeapQueue)
+    params.alphaTreeAlgorithmCode = 4;
     params.dissimilarityMetric = getString("DissimilarityMetric");
     params.bitdepth = getInteger("BitDepth");
     params.tse = getInteger("UseTreeSizeEstimation");

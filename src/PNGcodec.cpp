@@ -63,7 +63,7 @@ std::vector<uint16_t> PNGCodec::toImage(const cv::Mat &imageCV) {
         std::copy(r.begin<uint8_t>(), r.end<uint8_t>(), image8.begin());
         std::copy(g.begin<uint8_t>(), g.end<uint8_t>(), image8.begin() + imageCV.cols * imageCV.rows);
         std::copy(b.begin<uint8_t>(), b.end<uint8_t>(), image8.begin() + imageCV.cols * imageCV.rows * 2);
-        std::vector<uint16_t> image(imageCV.cols * imageCV.rows);
+        std::vector<uint16_t> image(imageCV.cols * imageCV.rows * imageCV.channels());
         for (size_t i = 0; i < image.size(); i++)
             image[i] = image8[i];
         return image;
@@ -76,6 +76,8 @@ std::tuple<std::vector<uint16_t>, int, int, int> PNGCodec::imread(const std::str
     if (filename == "RAND")
         return {{}, -1, -1, -1};
 
+    std::cout<<"lalala: "<<filename<<std::endl;
+    std::cout<<filename.compare("./images/image1.png")<<std::endl;
     // // Read the image file
     cv::Mat imageCV = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
