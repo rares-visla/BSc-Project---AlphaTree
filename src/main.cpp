@@ -9,8 +9,6 @@
 
 // args: Filename, nchannels, numthreads, testimgsize, algorithmcode, bitdepth, tseflag
 int main(int argc, char **argv) {
-    bool fileExists = std::filesystem::exists("./images/image1.png");
-    std::cout << "fileExists: " << fileExists << std::endl;
     srand(time(NULL));
 
     const auto configFileName = argc < 2 ? "config.txt" : std::string(argv[1]);
@@ -35,12 +33,8 @@ int main(int argc, char **argv) {
     const auto &bitdepth = params.UseRandomlyGeneratedImages ? params.bitdepth : 16 * ch;
     const auto &nch = params.UseRandomlyGeneratedImages ? params.nchannels : ch;
     const auto &dMetric = params.dissimilarityMetric;
-    std::cout << "\naaaaaaaaaaaaaa: " << dMetric << "\n";
     const auto &conn = params.connectivity;
     const auto &algCode = params.alphaTreeAlgorithmCode;
-//  lock algCode to 4 for now (floodHierHeapQueue)
-//    algCode = 4;
-    std::cout << "\nalgo: " << algCode << "\n";
     const auto &nthr = params.numthreads;
     const auto &nitr = params.numitr;
     const auto &tse = params.tse;

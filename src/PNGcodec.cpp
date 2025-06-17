@@ -76,8 +76,6 @@ std::tuple<std::vector<uint16_t>, int, int, int> PNGCodec::imread(const std::str
     if (filename == "RAND")
         return {{}, -1, -1, -1};
 
-    std::cout<<"lalala: "<<filename<<std::endl;
-    std::cout<<filename.compare("./images/image1.png")<<std::endl;
     // // Read the image file
     cv::Mat imageCV = cv::imread(filename, cv::IMREAD_UNCHANGED);
 

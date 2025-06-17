@@ -30,8 +30,6 @@ void AlphaTreeConfig::initialize(const std::string &filename_, const std::string
 }
 
 int AlphaTreeConfig::getAlphaTreeAlgorithmCode(std::string AlphaTreeAlgorithmName) {
-//    std::cout << "\nalgoalgo: " << AlphaTreeAlgorithmName;
-//    std::cout << "\nalgocode: " << AlgorithmNameToCode[AlphaTreeAlgorithmName];
     return AlgorithmNameToCode[AlphaTreeAlgorithmName];
 }
 
@@ -76,8 +74,6 @@ std::optional<AlphaTreeConfig::AlphaTreeParameters> AlphaTreeConfig::load(int ar
     params.randomGenImageWidth = getInteger("RandomlyGeneratedImageWidth");
     params.randomGenImageHeight = getInteger("RandomlyGeneratedImageHeight");
     params.alphaTreeAlgorithmCode = getAlphaTreeAlgorithmCode(getString("AlphaTreeAlgorithm"));
-    //lock alphaTreeAlgorithmCode to 4 for now (floodHierHeapQueue)
-    params.alphaTreeAlgorithmCode = 4;
     params.dissimilarityMetric = getString("DissimilarityMetric");
     params.bitdepth = getInteger("BitDepth");
     params.tse = getInteger("UseTreeSizeEstimation");
@@ -122,9 +118,9 @@ double AlphaTreeConfig::getDouble(const std::string &key) const {
 }
 
 std::string AlphaTreeConfig::trim(const std::string &str) const {
-    size_t first = str.find_first_not_of(' ');
+    size_t first = str.find_first_not_of(" \t\r\n");
     if (first == std::string::npos)
         return "";
-    size_t last = str.find_last_not_of(' ');
+    size_t last = str.find_last_not_of(" \t\r\n");
     return str.substr(first, (last - first + 1));
 }
