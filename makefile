@@ -17,7 +17,13 @@ OBJEXT      := o
 #-Wall -O3
 # g++ -o png_read_write png_read_write.cpp `pkg-config --cflags --libs opencv4`
 #Flags, Libraries and Includes
-CFLAGS      := $(shell pkg-config --cflags opencv4) -lstdc++fs -std=c++17 -fopenmp -Wall -g -O0
+BASE_FLAGS := $(shell pkg-config --cflags opencv4) -lstdc++fs -std=c++17 -fopenmp -Wall
+
+DEBUG_FLAGS   := $(BASE_FLAGS) -g -O0
+RELEASE_FLAGS := $(BASE_FLAGS) -O3
+
+#Default to debug
+CFLAGS      := $(DEBUG_FLAGS)
 LIB         := $(shell pkg-config --libs opencv4) -fopenmp
 INC         := -I /usr/local/include -I $(INCDIR)
 INCDEP      :=
@@ -31,7 +37,14 @@ SOURCES     := $(shell find $(SRCDIR) -type f -name "*.$(SRCEXT)")
 OBJECTS     := $(patsubst $(SRCDIR)/%,$(BUILDDIR)/%,$(SOURCES:.$(SRCEXT)=.$(OBJEXT)))
 
 #Defauilt Make
-all: directories $(TARGET)
+all: debug
+
+debug: CFLAGS := $(DEBUG_FLAGS)
+debug: directories $(TARGET)
+
+release: CFLAGS := $(RELEASE_FLAGS)
+release: directories $(TARGET)
+
 
 #Remake
 remake: cleaner all
