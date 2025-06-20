@@ -1,4 +1,4 @@
-#include <AlphaTreeConfig.hpp>
+#include "AlphaTreeConfig.hpp"
 
 void AlphaTreeConfig::initialize(const std::string &filename_, const std::string &commentToken_) {
     filename = filename_;

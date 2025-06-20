@@ -1,7 +1,7 @@
 #pragma once
 
-#include <QItem.hpp>
-#include <defines.hpp>
+#include "QItem.hpp"
+#include "alpha_tree/utility/defines.hpp"
 
 struct QItem {
     ImgIdx index = -1;

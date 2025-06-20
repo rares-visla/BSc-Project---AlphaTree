@@ -1,6 +1,6 @@
 #pragma once
-#include <QItem.hpp>
-#include <defines.hpp>
+#include "alpha_tree/queues/QItem.hpp"
+#include "alpha_tree/utility/defines.hpp"
 
 class QuadHeapQueue {
     ImgIdx cursize;

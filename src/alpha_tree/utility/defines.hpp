@@ -1,6 +1,7 @@
 #pragma once
+#include "alpha_tree/utility/allocator.hpp"
+#include "alpha_tree/utility/walltime.hpp"
 #include <algorithm>
-#include <allocator.hpp>
 #include <cassert>
 #include <cfloat>
 #include <cmath>
@@ -27,7 +28,6 @@
 #include <time.h>
 #include <unordered_map>
 #include <vector>
-#include <walltime.hpp>
 
 #define DELAYED_NODE_ALLOC 1
 #define HQUEUE_COST_AMORTIZE 1

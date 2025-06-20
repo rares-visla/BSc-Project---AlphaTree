@@ -1,5 +1,5 @@
 #pragma once
-#include <defines.hpp>
+#include "defines.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>

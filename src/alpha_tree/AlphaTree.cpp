@@ -1,5 +1,5 @@
-#include <AlphaTree.hpp>
-#include <HHPQ.hpp>
+#include "AlphaTree.hpp"
+#include "alpha_tree/queues/HHPQ.hpp"
 #include <cmath>
 
 #define RUN_FANCY_VIS_FOR_DEBUG 0

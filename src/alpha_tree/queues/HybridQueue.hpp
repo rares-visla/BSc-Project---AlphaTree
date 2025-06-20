@@ -1,10 +1,10 @@
 #pragma once
-#include <HeapQueue.hpp>
-#include <HierarQueue.hpp>
-#include <Trie.hpp>
-#include <allocator.hpp>
-#include <defines.hpp>
-#include <walltime.hpp>
+#include "alpha_tree/queues/HeapQueue.hpp"
+#include "alpha_tree/queues/HierarQueue.hpp"
+#include "alpha_tree/trie/Trie.hpp"
+#include "alpha_tree/utility/allocator.hpp"
+#include "alpha_tree/utility/defines.hpp"
+#include "alpha_tree/utility/walltime.hpp"
 
 #define LISTSIZE_DEFAULT 12
 #define HEAPSIZE_DEFAULT 128

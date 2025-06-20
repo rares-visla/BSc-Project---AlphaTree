@@ -1,4 +1,4 @@
-#include <defines.hpp>
+#include "alpha_tree/utility/defines.hpp"
 
 class RandGenImage {
   public:

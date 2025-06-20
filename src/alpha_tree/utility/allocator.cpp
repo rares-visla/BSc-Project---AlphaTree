@@ -1,5 +1,5 @@
+#include "defines.hpp"
 #include <cstdlib>
-#include <defines.hpp>
 
 size_t memuse, max_memuse;
 

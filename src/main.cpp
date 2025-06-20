@@ -1,9 +1,9 @@
-#include <PNGcodec.hpp>
-#include <defines.hpp>
+#include "alpha_tree/image_handling/PNGcodec.hpp"
+#include "alpha_tree/utility/defines.hpp"
 
-#include <AlphaTree.hpp>
-#include <AlphaTreeConfig.hpp>
-#include <RandGenImage.hpp>
+#include "alpha_tree/AlphaTree.hpp"
+#include "alpha_tree/AlphaTreeConfig.hpp"
+#include "alpha_tree/image_handling/RandGenImage.hpp"
 #include "feature_extraction/FeatureComputer.hpp"
 #include <filesystem>
 

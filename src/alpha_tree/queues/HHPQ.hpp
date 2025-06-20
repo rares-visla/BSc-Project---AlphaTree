@@ -1,9 +1,9 @@
 #pragma once
 
-#include <HeapQueue.hpp>
-#include <QItem.hpp>
-#include <QuadHeapQueue.hpp>
-#include <defines.hpp>
+#include "QItem.hpp"
+#include "QuadHeapQueue.hpp"
+#include "alpha_tree/queues/HeapQueue.hpp"
+#include "alpha_tree/utility/defines.hpp"
 
 class HHPQ {
     QItem *_cache = nullptr;

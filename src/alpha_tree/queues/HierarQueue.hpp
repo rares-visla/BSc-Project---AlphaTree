@@ -1,7 +1,7 @@
 #pragma once
 
-#include <allocator.hpp>
-#include <defines.hpp>
+#include "alpha_tree/utility/allocator.hpp"
+#include "alpha_tree/utility/defines.hpp"
 
 // Do not use beyond 20-bit image
 class HierarQueue {

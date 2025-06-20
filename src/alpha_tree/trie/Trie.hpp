@@ -1,6 +1,6 @@
 #pragma once
 
-#include <allocator.hpp>
+#include "alpha_tree/utility/allocator.hpp"
 
 #define TRIE_DEBUG 0
 

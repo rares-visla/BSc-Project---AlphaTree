@@ -1,4 +1,4 @@
-#include <RankItem.hpp>
+#include "RankItem.hpp"
 
 template <class Pixel> ImgIdx RankItem<Pixel>::get_pidx0(ImgIdx _connectivity) const {
     if (_connectivity == 4)

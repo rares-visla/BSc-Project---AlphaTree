@@ -1,6 +1,6 @@
 #pragma once
 
-#include <defines.hpp>
+#include "alpha_tree/utility/defines.hpp"
 
 template <class Pixel> class PixelDissimilarity {
   public:

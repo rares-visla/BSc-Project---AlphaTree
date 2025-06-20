@@ -1,18 +1,18 @@
 #pragma once
-#include <AlphaTreeConfig.hpp>
-#include <HeapQueue.hpp>
-#include <HierarQueue.hpp>
-#include <HybridQueue.hpp>
-#include <LadderQueue.hpp>
-#include <PixelDissimilarity.hpp>
-#include <QItem.hpp>
-#include <RankItem.hpp>
-#include <Trie.hpp>
-#include <defines.hpp>
-#include <radixsort_teeninga/sort/radix_sort_parallel.h>
-#include <radixsort_teeninga/sort/sort_item.h>
-#include <walltime.hpp>
+#include "AlphaTreeConfig.hpp"
+#include "alpha_tree/dissimilarity/PixelDissimilarity.hpp"
+#include "alpha_tree/dissimilarity/RankItem.hpp"
+#include "alpha_tree/queues/HeapQueue.hpp"
+#include "alpha_tree/queues/HierarQueue.hpp"
+#include "alpha_tree/queues/HybridQueue.hpp"
+#include "alpha_tree/queues/LadderQueue.hpp"
+#include "alpha_tree/queues/QItem.hpp"
+#include "alpha_tree/trie/Trie.hpp"
+#include "alpha_tree/utility/defines.hpp"
+#include "alpha_tree/utility/walltime.hpp"
 #include "feature_extraction/AlphaNodeFeatures.hpp"
+#include "radixsort_teeninga/sort/radix_sort_parallel.h"
+#include "radixsort_teeninga/sort/sort_item.h"
 
 using namespace pmt;
 

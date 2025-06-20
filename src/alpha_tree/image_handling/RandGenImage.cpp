@@ -1,4 +1,4 @@
-#include <RandGenImage.hpp>
+#include "alpha_tree/image_handling/RandGenImage.hpp"
 
 void RandGenImage::randomize8(uint8_t *img, int width, int height, int bit_depth, int ch) {
     uint8_t pix;

@@ -1,7 +1,7 @@
 #pragma once
+#include "alpha_tree/utility/defines.hpp"
 #include <cfloat>
 #include <cstdint>
-#include <defines.hpp>
 #define PROFILE 0
 #define HEAPQUEUE_DEBUG 1
 
