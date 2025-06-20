@@ -4,14 +4,16 @@
 struct AlphaNodeFeatures{
     int area;
     double elongation;
-    double meanIntensity;
-    double contrast;
+    double avgRed;
+    double avgGreen;
+    double avgBlue;
 
     AlphaNodeFeatures():
         area(0),
         elongation(0),
-        meanIntensity(0),
-        contrast(0)
+        avgRed(0),
+        avgGreen(0),
+        avgBlue(0)
     {}
 };
 

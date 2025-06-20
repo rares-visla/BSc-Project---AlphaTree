@@ -67,11 +67,7 @@ template <class Pixel> class AlphaNode {
     float alpha = std::numeric_limits<Pixel>::infinity();
     float sumPix = 0.0;
 #if RGB_FILTER
-    float rgb[3] = {
-        0.0f,
-        0.0f,
-        0.0f
-    };
+    float rgb[3] = {0.0f, 0.0f, 0.0f};
 #endif
     Pixel minPix = std::numeric_limits<Pixel>::max();
     Pixel maxPix = std::numeric_limits<Pixel>::min();
@@ -84,9 +80,9 @@ template <class Pixel> class AlphaNode {
     double sumY2 = 0.0;
     double compactness = 0.0;
 
-    //feature-related members
-//    AlphaNodeFeatures features;
-//    bool featuresComputed = false;
+    // feature-related members
+    AlphaNodeFeatures features;
+    bool featuresComputed = false;
 
     AlphaNode() = default;
     AlphaNode(Pixel pixelVal, float alpha_, ImgIdx parentidx_ = ROOTIDX);
@@ -102,10 +98,15 @@ template <class Pixel> class AlphaNode {
     void print(AlphaNode *_node);
     void print(AlphaNode *_node, int heading);
 
+    void computeFeatures();
+
     bool operator<(const AlphaNode &other) const { return alpha < other.alpha; }
 
   private:
     void computeCompactness();
+    void computeAvgRed();
+    void computeAvgGreen();
+    void computeAvgBlue();
 };
 
 template <class Pixel> class AlphaTree {

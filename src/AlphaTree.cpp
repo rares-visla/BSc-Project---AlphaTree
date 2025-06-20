@@ -129,7 +129,10 @@ template <class Pixel> void AlphaNode<Pixel>::print(AlphaNode *_node, int headin
 }
 
 template <class Pixel> void AlphaNode<Pixel>::computeCompactness() {
-    if (area == 1 || area == 0) compactness = 0;
+    if (area == 1 || area == 0) {
+        compactness = 0;
+        return;
+    }
 
     double centroidX = sumX / area;
     double centroidY = sumY / area;
@@ -145,6 +148,25 @@ template <class Pixel> void AlphaNode<Pixel>::computeCompactness() {
 
     compactness = eta20 + eta02;
 }
+
+template <class Pixel> void AlphaNode<Pixel>::computeAvgRed(){
+    features.avgRed = (double)this->rgb[0] / (double)this->area;
+}
+template <class Pixel> void AlphaNode<Pixel>::computeAvgGreen(){
+    features.avgGreen = (double)this->rgb[1] / (double)this->area;
+}
+
+template <class Pixel> void AlphaNode<Pixel>::computeAvgBlue(){
+    features.avgBlue = (double)this->rgb[2] / (double)this->area;
+}
+
+template <class Pixel> void AlphaNode<Pixel>::computeFeatures(){
+    computeCompactness();
+    computeAvgRed();
+    computeAvgGreen();
+    computeAvgBlue();
+}
+
 
 template <class Pixel>
 void AlphaTree<Pixel>::BuildAlphaTree(const Pixel *img, int height_in, int width_in, int channel_in,
