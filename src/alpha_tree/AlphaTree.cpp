@@ -161,10 +161,13 @@ template <class Pixel> void AlphaNode<Pixel>::computeAvgBlue(){
 }
 
 template <class Pixel> void AlphaNode<Pixel>::computeFeatures(){
+    features.area = (double)this->area;
     computeCompactness();
+    features.compactness = (double)this->compactness;
     computeAvgRed();
     computeAvgGreen();
     computeAvgBlue();
+    featuresComputed = true;
 }
 
 
@@ -239,14 +242,14 @@ template <class Pixel> void AlphaTree<Pixel>::AlphaFilter(Pixel *outimg, float a
 #endif
     for (int i = 0; i < _curSize; i++) {
 #if RGB_FILTER
-        if (randomNodeColor) {
-            _node[i].rgb[0] =
-                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
-            _node[i].rgb[1] =
-                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
-            _node[i].rgb[2] =
-                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
-        }
+//        if (randomNodeColor) {
+//            _node[i].rgb[0] =
+//                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
+//            _node[i].rgb[1] =
+//                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
+//            _node[i].rgb[2] =
+//                float(std::numeric_limits<Pixel>::max()) * float(rand()) / float(RAND_MAX) * _node[i].area;
+//        }
 #endif
         _node[i]._rootIdx = _node[i].parentIdx;
     }
