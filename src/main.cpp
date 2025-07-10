@@ -209,6 +209,7 @@ int main(int argc, char **argv) {
     std::cout << "Number of nodes: " << tree._curSize << std::endl;
     std::vector<AlphaNodeFeatures> featureVectors;
     std::vector<std::string> nodeLabels;
+    std::map<int, int>featureIdxToNodeIdx; // Maps feature vector index to node index
 
     for (int i = 0; i < tree._curSize; i++) {
         if (tree._node[i].area > 5000 && tree._node[i].area < 100000) {
@@ -219,6 +220,7 @@ int main(int argc, char **argv) {
 
                 featureVectors.push_back(tree._node[i].features);
                 nodeLabels.push_back(label);
+                featureIdxToNodeIdx[featureVectors.size() - 1] = i; // Store the mapping
             }
         }
     }
@@ -265,9 +267,52 @@ int main(int argc, char **argv) {
     std::cout << "  Background/None: " << noneCount << " ("
               << (100.0 * noneCount / nodeLabels.size()) << "%)" << std::endl;
 
-    int count = 0;
-    for (int i = 0; i < tree._curSize; i++) {
-        if (tree._node[i].area > 5000) {
+    // Convert your image8 vector to cv::Mat
+    cv::Mat visImg(height, width, CV_8UC1, image8.data());
+    cv::Mat colorImg;
+    cv::cvtColor(visImg, colorImg, cv::COLOR_GRAY2BGR);
+
+//    int minsize = 10000;
+//    int maxsize = 100000;
+    // Draw colored bounding boxes for filtered nodes
+    for (size_t idx = 0; idx < featureVectors.size(); ++idx) {
+        const auto& features = featureVectors[idx];
+        const std::string& label = nodeLabels[idx];
+        const auto& node = tree._node[featureIdxToNodeIdx[idx]]; // Get the corresponding node
+
+        // Find the corresponding node index (optional: if you store node index, use it directly)
+        // Here, assume featureVectors and nodeLabels are in the same order as the filtered nodes
+
+        int minX = node.minX;
+        int minY = node.minY;
+        int maxX = node.maxX;
+        int maxY = node.maxY;
+
+        cv::Scalar color;
+        if (label == "healthy")
+            color = cv::Scalar(0, 255, 0); // Green
+        else if (label == "diseased")
+            color = cv::Scalar(0, 0, 255); // Red
+        else
+            color = cv::Scalar(255, 0, 0); // Blue
+
+        cv::rectangle(
+            colorImg,
+            cv::Point(minX, minY),
+            cv::Point(maxX, maxY),
+            color,
+            2
+        );
+    }
+
+    std::string outputFileName = "nodes_bounding_boxes_labeled_0.3_IoU.png";
+    //add minsize and maxsize to the filename
+//    outputFileName = "nodes_bounding_boxes_" + std::to_string(minsize) + "_" + std::to_string(maxsize) + ".png";
+    cv::imwrite(outputFileName, colorImg);
+
+//    int count = 0;
+//    for (int i = 0; i < tree._curSize; i++) {
+//        if (tree._node[i].area > 5000) {
 //            std::cout << "Bounding Box of node " << i << ":\n";
 //            std::cout << "MinX: " << tree._node[i].minX << ", MinY: " << tree._node[i].minY << "\n";
 //            std::cout << "MaxX: " << tree._node[i].maxX << ", MaxY: " << tree._node[i].maxY << "\n";
@@ -287,8 +332,8 @@ int main(int argc, char **argv) {
 //                std::cout << "FOUND" << std::endl;
 //                std::cout << "minX: " << tree._node[i].minX << "minY: " << tree._node[i].minY << std::endl;
 //            }
-        }
-    }
+//        }
+//    }
 
     // Save the image with ROIs drawn
 //    cv::imwrite("image_with_rois.png", image);

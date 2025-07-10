@@ -121,6 +121,36 @@ bool BoundingBoxLabeler::isInsideBoundingBox(double x, double y, const BoundingB
     return x >= box.x_min && x <= box.x_max && y >= box.y_min && y <= box.y_max;
 }
 
+double BoundingBoxLabeler::overlap(const AlphaNode<uint8_t>& node, const BoundingBox& box) {
+    double nodeX1 = node.minX;
+    double nodeY1 = node.minY;
+    double nodeX2 = node.maxX;
+    double nodeY2 = node.maxY;
+
+    bool xOverlap = (nodeX1 <= box.x_max) && (nodeX2 >= box.x_min);
+    bool yOverlap = (nodeY1 <= box.y_max) && (nodeY2 >= box.y_min);
+
+    if (!xOverlap || !yOverlap) return 0.0f;  // No overlap
+
+    double overlapX1 = std::max(nodeX1, (double)box.x_min);
+    double overlapY1 = std::max(nodeY1, (double)box.y_min);
+    double overlapX2 = std::min(nodeX2, (double)box.x_max);
+    double overlapY2 = std::min(nodeY2, (double)box.y_max);
+
+    double overlapArea = std::max(0.0, (overlapX2 - overlapX1)) * std::max(0.0, (overlapY2 - overlapY1));
+    return overlapArea;
+}
+
+double BoundingBoxLabeler::IoU(const AlphaNode<uint8_t> &node, const BoundingBox &box) {
+    double overlapArea = overlap(node, box);
+    if (overlapArea == 0.0) return 0.0;
+
+    double nodeArea = node.area;
+    double boxArea = (box.x_max - box.x_min) * (box.y_max - box.y_min);
+
+    return overlapArea / (nodeArea + boxArea - overlapArea);
+}
+
 std::string BoundingBoxLabeler::assignLabel(const AlphaTree<uint8_t>& tree, int nodeIdx,
                                             const std::vector<BoundingBox>& boxes) {
     const auto& node = tree._node[nodeIdx];
@@ -136,35 +166,23 @@ std::string BoundingBoxLabeler::assignLabel(const AlphaTree<uint8_t>& tree, int 
             return (box.classId == 0) ? "healthy" : "diseased";
         }
 
-        // Check 2: Relaxed overlap-based matching
-        double nodeRadius = sqrt(node.area / M_PI);  // Circular node approximation
-        double nodeX1 = centroidX - nodeRadius;
-        double nodeY1 = centroidY - nodeRadius;
-        double nodeX2 = centroidX + nodeRadius;
-        double nodeY2 = centroidY + nodeRadius;
+//        //Check 2: bounding box overlap
+//        double overlapArea = overlap(node, box);
+//        if (overlapArea / node.area > 0.5) {
+//            return (box.classId == 0) ? "healthy" : "diseased";
+//        }
 
-        bool xOverlap = (nodeX1 <= box.x_max) && (nodeX2 >= box.x_min);
-        bool yOverlap = (nodeY1 <= box.y_max) && (nodeY2 >= box.y_min);
-
-        if (xOverlap && yOverlap) {
-            double overlapX1 = std::max(nodeX1, (double)box.x_min);
-            double overlapY1 = std::max(nodeY1, (double)box.y_min);
-            double overlapX2 = std::min(nodeX2, (double)box.x_max);
-            double overlapY2 = std::min(nodeY2, (double)box.y_max);
-
-            double overlapArea = std::max(0.0, (overlapX2 - overlapX1)) * std::max(0.0, (overlapY2 - overlapY1));
-
-            double overlapRatio = overlapArea / node.area;
-
-            // Relaxed threshold: 1% overlap or absolute overlap > 50 pixels
-            if (overlapRatio > 0.01 || overlapArea > 50) {
-                return (box.classId == 0) ? "healthy" : "diseased";
-            }
+        //Check 3: IoU
+        double iou = IoU(node, box);
+        if (iou > 0.3) {
+            return (box.classId == 0) ? "healthy" : "diseased";
         }
     }
 
     return "none";  // No matching bounding box found
 }
+
+
 
 std::vector<BoundingBox> BoundingBoxLabeler::getBoundingBoxes() {
     return boundingBoxes_;

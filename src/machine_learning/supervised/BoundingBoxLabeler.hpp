@@ -53,7 +53,10 @@ class BoundingBoxLabeler {
 
     static std::vector<BoundingBox> loadBoundingBoxes(const std::string& filename, int imageWidth, int imageHeight);
     static bool isInsideBoundingBox(double x, double y, const BoundingBox& box);
-    static std::string assignLabel(const AlphaTree<uint8_t>& tree, int nodeIdx, const std::vector<BoundingBox>& boxes);
+    std::string assignLabel(const AlphaTree<uint8_t>& tree, int nodeIdx, const std::vector<BoundingBox>& boxes);
+
+    double overlap(const AlphaNode<uint8_t>& node, const BoundingBox& box);
+    double IoU(const AlphaNode<uint8_t>& node, const BoundingBox& box);
 
     std::vector<BoundingBox> getBoundingBoxes();
 };
