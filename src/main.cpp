@@ -5,6 +5,8 @@
 #include "alpha_tree/AlphaTreeConfig.hpp"
 #include "alpha_tree/image_handling/RandGenImage.hpp"
 #include "feature_extraction/FeatureComputer.hpp"
+#include "machine_learning/supervised/BoundingBoxLabeler.hpp"
+#include "machine_learning/supervised/LvqClassifier.hpp"
 #include <filesystem>
 
 // args: Filename, nchannels, numthreads, testimgsize, algorithmcode, bitdepth, tseflag
@@ -30,7 +32,7 @@ int main(int argc, char **argv) {
 
     const auto &width = params.UseRandomlyGeneratedImages ? params.randomGenImageWidth : w;
     const auto &height = params.UseRandomlyGeneratedImages ? params.randomGenImageHeight : h;
-    const auto &bitdepth = params.UseRandomlyGeneratedImages ? params.bitdepth : 16 * ch;
+    const auto &bitdepth = params.UseRandomlyGeneratedImages ? params.bitdepth : 8 * ch;
     const auto &nch = params.UseRandomlyGeneratedImages ? params.nchannels : ch;
     const auto &dMetric = params.dissimilarityMetric;
     const auto &conn = params.connectivity;
@@ -187,73 +189,145 @@ int main(int argc, char **argv) {
     printf("-------------------Run %d/%d: %.3f------------------\n", (int)1, nitr, runtime);
     runtimes.push_back(runtime);
 
-//    std::vector<uint8_t> outimg(width * height * nch);
-//    tree.AlphaFilter(outimg.data(), 100, 16);
-//    std::vector<uint16_t> outimg16(width * height * nch);
-//    for (size_t i = 0; i < outimg.size(); i++){
-//        outimg16[i] = outimg[i];
-//    }
-//    PNGCodec::imwrite(outimg16, width, height, nch, "out.png");
+    //TREE HAS BEEN BUILT
+
+//    ImgIdx nodeID = 16094;
+//    std::cout << "Bounding Box of node " << nodeID << ":\n";
+//    std::cout << "MinX: " << tree._node[nodeID].minX << ", MinY: " << tree._node[nodeID].minY << "\n";
+//    std::cout << "MaxX: " << tree._node[nodeID].maxX << ", MaxY: " << tree._node[nodeID].maxY << "\n";
+//
+//    ImgIdx bboxWidth = tree._node[nodeID].maxX - tree._node[nodeID].minX + 1;
+//    ImgIdx bboxHeight = tree._node[nodeID].maxY - tree._node[nodeID].minY + 1;
+//
+//    std::cout << "Width: " << bboxWidth << ", Height: " << bboxHeight << "\n";
+
+//    std::vector<BoundingBox> boundingBoxes = BoundingBoxLabeler::loadBoundingBoxes("images/image1_boxes.txt", width, height);
+
+    BoundingBoxLabeler labeler("images/image1_boxes.txt", width, height);
+//    labeler.printBoundingBoxInfo();
 
     std::cout << "Number of nodes: " << tree._curSize << std::endl;
     std::vector<AlphaNodeFeatures> featureVectors;
+    std::vector<std::string> nodeLabels;
+
     for (int i = 0; i < tree._curSize; i++) {
-        if (tree._node[i].area > 50 && tree._node[i].area < 10000) {
+        if (tree._node[i].area > 5000 && tree._node[i].area < 100000) {
             tree._node[i].computeFeatures();
             if (tree._node[i].featuresComputed) {
+                //Assign label based on bounding box
+                std::string label = labeler.labelNode(tree, i);
+
                 featureVectors.push_back(tree._node[i].features);
+                nodeLabels.push_back(label);
             }
         }
     }
-    std::cout << "Number of features: " << featureVectors.size() << std::endl;
+//    std::cout << "Number of features: " << featureVectors.size() << std::endl;
+//    for (int i = 0; i < tree._curSize; i++) {
+//        if (tree._node[i].area > 100) {
+//            std::string label = labeler.labelNode(tree, i);
+//            nodeLabels.push_back(label);
+//        }
+//    }
 
-    // Normalize features using min-max normalization
-    if (!featureVectors.empty()) {
-        // Find min and max values for each feature
-        double minArea = featureVectors[0].area, maxArea = featureVectors[0].area;
-        double minCompactness = featureVectors[0].compactness, maxCompactness = featureVectors[0].compactness;
-        double minAvgRed = featureVectors[0].avgRed, maxAvgRed = featureVectors[0].avgRed;
-        double minAvgGreen = featureVectors[0].avgGreen, maxAvgGreen = featureVectors[0].avgGreen;
-        double minAvgBlue = featureVectors[0].avgBlue, maxAvgBlue = featureVectors[0].avgBlue;
 
-        for (const auto& feature : featureVectors) {
-            minArea = std::min(minArea, feature.area);
-            maxArea = std::max(maxArea, feature.area);
-            minCompactness = std::min(minCompactness, feature.compactness);
-            maxCompactness = std::max(maxCompactness, feature.compactness);
-            minAvgRed = std::min(minAvgRed, feature.avgRed);
-            maxAvgRed = std::max(maxAvgRed, feature.avgRed);
-            minAvgGreen = std::min(minAvgGreen, feature.avgGreen);
-            maxAvgGreen = std::max(maxAvgGreen, feature.avgGreen);
-            minAvgBlue = std::min(minAvgBlue, feature.avgBlue);
-            maxAvgBlue = std::max(maxAvgBlue, feature.avgBlue);
-        }
+    //FEATURES HAVE BEEN COMPUTED
 
-        // Normalize each feature vector
-        for (auto& feature : featureVectors) {
-            feature.area = (maxArea != minArea) ? (feature.area - minArea) / (maxArea - minArea) : 0.0;
-            feature.compactness = (maxCompactness != minCompactness) ? (feature.compactness - minCompactness) / (maxCompactness - minCompactness) : 0.0;
-            feature.avgRed = (maxAvgRed != minAvgRed) ? (feature.avgRed - minAvgRed) / (maxAvgRed - minAvgRed) : 0.0;
-            feature.avgGreen = (maxAvgGreen != minAvgGreen) ? (feature.avgGreen - minAvgGreen) / (maxAvgGreen - minAvgGreen) : 0.0;
-            feature.avgBlue = (maxAvgBlue != minAvgBlue) ? (feature.avgBlue - minAvgBlue) / (maxAvgBlue - minAvgBlue) : 0.0;
-        }
+    // Add this after computing features
+    std::cout << "\n=== Alpha Tree Node Coverage ===" << std::endl;
+    std::cout << "Image dimensions: " << width << "x" << height << std::endl;
+    std::cout << "Total alpha tree nodes: " << featureVectors.size() << std::endl;
 
-        std::cout << "Features normalized using Min-Max normalization" << std::endl;
+    // Check node area distribution
+    std::vector<double> areas;
+    for (const auto& features : featureVectors) {
+        areas.push_back(features.area);
+    }
+    std::sort(areas.begin(), areas.end());
+
+    std::cout << "Node area range: " << areas.front() << " to " << areas.back() << std::endl;
+    std::cout << "Median node area: " << areas[areas.size()/2] << std::endl;
+
+
+    // Count and display label distribution
+    int healthyCount = 0, diseasedCount = 0, noneCount = 0;
+    for (const auto& label : nodeLabels) {
+        if (label == "healthy") healthyCount++;
+        else if (label == "diseased") diseasedCount++;
+        else noneCount++;
     }
 
+    std::cout << "Label distribution:" << std::endl;
+    std::cout << "  Healthy: " << healthyCount << " ("
+              << (100.0 * healthyCount / nodeLabels.size()) << "%)" << std::endl;
+    std::cout << "  Diseased: " << diseasedCount << " ("
+              << (100.0 * diseasedCount / nodeLabels.size()) << "%)" << std::endl;
+    std::cout << "  Background/None: " << noneCount << " ("
+              << (100.0 * noneCount / nodeLabels.size()) << "%)" << std::endl;
 
-//    save features to file
-//    std::string filename = "features.txt";
-//    std::ofstream file(filename);
-//    for (auto &feature : featureVectors) {
-//        file << feature.area << " "
-//             << feature.compactness << " "
-//             << feature.avgRed << " "
-//             << feature.avgGreen << " "
-//             << std::endl;
+    int count = 0;
+    for (int i = 0; i < tree._curSize; i++) {
+        if (tree._node[i].area > 5000) {
+//            std::cout << "Bounding Box of node " << i << ":\n";
+//            std::cout << "MinX: " << tree._node[i].minX << ", MinY: " << tree._node[i].minY << "\n";
+//            std::cout << "MaxX: " << tree._node[i].maxX << ", MaxY: " << tree._node[i].maxY << "\n";
+//
+//            ImgIdx bboxWidth = tree._node[i].maxX - tree._node[i].minX + 1;
+//            ImgIdx bboxHeight = tree._node[i].maxY - tree._node[i].minY + 1;
+//
+//            std::cout << "Width: " << bboxWidth << ", Height: " << bboxHeight << "\n";
+
+            // Clip to image bounds (safe)
+//            cv::Rect roi(tree._node[i].minX, tree._node[i].minY, bboxWidth, bboxHeight);
+//            roi = roi & cv::Rect(0, 0, width, height);  // Ensure within image
+
+//            cv::rectangle(image, roi, cv::Scalar(0, 0, 255), 2);  // Draw red rectangle
+
+//            if (tree._node[i].minX != 0 || tree._node[i].minY != 0){
+//                std::cout << "FOUND" << std::endl;
+//                std::cout << "minX: " << tree._node[i].minX << "minY: " << tree._node[i].minY << std::endl;
+//            }
+        }
+    }
+
+    // Save the image with ROIs drawn
+//    cv::imwrite("image_with_rois.png", image);
+//    std::cout << "Saved image_with_rois.png" << std::endl;
+
+
+    //    // Normalize features using min-max normalization
+//    if (!featureVectors.empty()) {
+//        // Find min and max values for each feature
+//        double minArea = featureVectors[0].area, maxArea = featureVectors[0].area;
+//        double minCompactness = featureVectors[0].compactness, maxCompactness = featureVectors[0].compactness;
+//        double minAvgRed = featureVectors[0].avgRed, maxAvgRed = featureVectors[0].avgRed;
+//        double minAvgGreen = featureVectors[0].avgGreen, maxAvgGreen = featureVectors[0].avgGreen;
+//        double minAvgBlue = featureVectors[0].avgBlue, maxAvgBlue = featureVectors[0].avgBlue;
+//
+//        for (const auto& feature : featureVectors) {
+//            minArea = std::min(minArea, feature.area);
+//            maxArea = std::max(maxArea, feature.area);
+//            minCompactness = std::min(minCompactness, feature.compactness);
+//            maxCompactness = std::max(maxCompactness, feature.compactness);
+//            minAvgRed = std::min(minAvgRed, feature.avgRed);
+//            maxAvgRed = std::max(maxAvgRed, feature.avgRed);
+//            minAvgGreen = std::min(minAvgGreen, feature.avgGreen);
+//            maxAvgGreen = std::max(maxAvgGreen, feature.avgGreen);
+//            minAvgBlue = std::min(minAvgBlue, feature.avgBlue);
+//            maxAvgBlue = std::max(maxAvgBlue, feature.avgBlue);
+//        }
+//
+//        // Normalize each feature vector
+//        for (auto& feature : featureVectors) {
+//            feature.area = (maxArea != minArea) ? (feature.area - minArea) / (maxArea - minArea) : 0.0;
+//            feature.compactness = (maxCompactness != minCompactness) ? (feature.compactness - minCompactness) / (maxCompactness - minCompactness) : 0.0;
+//            feature.avgRed = (maxAvgRed != minAvgRed) ? (feature.avgRed - minAvgRed) / (maxAvgRed - minAvgRed) : 0.0;
+//            feature.avgGreen = (maxAvgGreen != minAvgGreen) ? (feature.avgGreen - minAvgGreen) / (maxAvgGreen - minAvgGreen) : 0.0;
+//            feature.avgBlue = (maxAvgBlue != minAvgBlue) ? (feature.avgBlue - minAvgBlue) / (maxAvgBlue - minAvgBlue) : 0.0;
+//        }
+//
+//        std::cout << "Features normalized using Min-Max normalization" << std::endl;
 //    }
-//    file.close();
-//    std::cout << "Features saved to file: " << filename << std::endl;
 
     if (!runtimes.empty()) {
         double minRuntime = *std::min_element(runtimes.begin(), runtimes.end());

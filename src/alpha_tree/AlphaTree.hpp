@@ -74,19 +74,26 @@ template <class Pixel> class AlphaNode {
     ImgIdx parentIdx = ROOTIDX;
     ImgIdx _rootIdx = ROOTIDX;
 
-    double sumX = 0.0;
-    double sumY = 0.0;
-    double sumX2 = 0.0;
-    double sumY2 = 0.0;
-    double compactness = 0.0;
+    float sumX = 0.0;
+    float sumY = 0.0;
+    float sumX2 = 0.0;
+    float sumY2 = 0.0;
+    float compactness = 0.0;
 
     // feature-related members
     AlphaNodeFeatures features;
     bool featuresComputed = false;
 
+    // for bounding box
+    short minX = std::numeric_limits<short>::max();
+    short minY = std::numeric_limits<short>::max();
+    short maxX = 0;
+    short maxY = 0;
+
     AlphaNode() = default;
     AlphaNode(Pixel pixelVal, float alpha_, ImgIdx parentidx_ = ROOTIDX);
     AlphaNode(float alpha_, ImgIdx parentidx_ = ROOTIDX);
+    AlphaNode(Pixel pixelVal, float alpha_, ImgIdx x, ImgIdx y, Pixel r, Pixel g, Pixel b, ImgIdx parentidx_ = ROOTIDX);
 
     inline void set(ImgIdx area_in, float level, float sumPix_in, Pixel minPix_in, Pixel maxPix_in);
     inline void add(AlphaNode *q);

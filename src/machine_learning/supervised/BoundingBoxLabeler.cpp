@@ -1,5 +1,86 @@
 #include "BoundingBoxLabeler.hpp"
 
+std::vector<double> BoundingBoxLabeler::getBoundingBoxAreas() const {
+    std::vector<double> areas;
+    for (const auto& box : boundingBoxes_) {
+        double pixelWidth = box.width * imageWidth_;
+        double pixelHeight = box.height * imageHeight_;
+        double area = pixelWidth * pixelHeight;
+        areas.push_back(area);
+    }
+    return areas;
+}
+
+std::pair<double, double> BoundingBoxLabeler::getAreaRange() const {
+    auto areas = getBoundingBoxAreas();
+    if (areas.empty()) return {0.0, 0.0};
+
+    auto minMax = std::minmax_element(areas.begin(), areas.end());
+    return {*minMax.first, *minMax.second};
+}
+
+
+void BoundingBoxLabeler::printBoundingBoxInfo() const {
+    std::cout << "\n=== Bounding Box Information ===" << std::endl;
+    std::cout << "Image dimensions: " << imageWidth_ << "x" << imageHeight_ << std::endl;
+    std::cout << "Total bounding boxes: " << boundingBoxes_.size() << std::endl;
+
+    if (boundingBoxes_.empty()) {
+        std::cout << "No bounding boxes loaded!" << std::endl;
+        return;
+    }
+
+    auto areas = getBoundingBoxAreas();
+    auto [minArea, maxArea] = getAreaRange();
+
+    std::cout << "Bounding box areas:" << std::endl;
+    std::cout << "  Min area: " << minArea << " pixels" << std::endl;
+    std::cout << "  Max area: " << maxArea << " pixels" << std::endl;
+
+    // Count by class
+    std::map<int, int> classCounts;
+    std::map<int, std::vector<double>> classAreas;
+
+    for (size_t i = 0; i < boundingBoxes_.size(); i++) {
+        const auto& box = boundingBoxes_[i];
+        classCounts[box.classId]++;
+        classAreas[box.classId].push_back(areas[i]);
+
+        double pixelWidth = box.width * imageWidth_;
+        double pixelHeight = box.height * imageHeight_;
+
+        std::cout << "  Box " << i << " (Class " << box.classId << "): "
+                  << "area=" << areas[i] << ", "
+                  << "size=" << pixelWidth << "x" << pixelHeight << std::endl;
+    }
+
+    std::cout << "\nClass statistics:" << std::endl;
+    for (const auto& pair : classCounts) {
+        int classId = pair.first;
+        const auto& classAreaVec = classAreas[classId];
+        double avgArea = std::accumulate(classAreaVec.begin(), classAreaVec.end(), 0.0) / classAreaVec.size();
+
+        std::cout << "  Class " << classId << ": " << pair.second << " boxes, "
+                  << "avg area=" << avgArea << std::endl;
+    }
+    std::cout << "================================\n" << std::endl;
+}
+
+std::string BoundingBoxLabeler::labelNode(const AlphaTree<uint8_t>& tree, int nodeIdx) {
+    return assignLabel(tree, nodeIdx, boundingBoxes_);
+}
+
+bool BoundingBoxLabeler::isNodeInAreaRange(double nodeArea) const {
+    auto [minArea, maxArea] = getAreaRange();
+
+    // Add some tolerance (e.g., 50% smaller to 200% larger than bounding box range)
+    double minThreshold = minArea * 0.5;
+    double maxThreshold = maxArea * 2.0;
+
+    return (nodeArea >= minThreshold && nodeArea <= maxThreshold);
+}
+
+
 std::vector<BoundingBox> BoundingBoxLabeler::loadBoundingBoxes(const std::string& filename, int imageWidth, int imageHeight) {
     std::vector<BoundingBox> boxes;
     std::ifstream file(filename);
@@ -42,16 +123,49 @@ bool BoundingBoxLabeler::isInsideBoundingBox(double x, double y, const BoundingB
 
 std::string BoundingBoxLabeler::assignLabel(const AlphaTree<uint8_t>& tree, int nodeIdx,
                                             const std::vector<BoundingBox>& boxes) {
-    double centroidX = static_cast<double>(tree._node[nodeIdx].sumX) / tree._node[nodeIdx].area;
-    double centroidY = static_cast<double>(tree._node[nodeIdx].sumY) / tree._node[nodeIdx].area;
+    const auto& node = tree._node[nodeIdx];
 
-    // Check each bounding box
+    if (node.area == 0) return "none";  // skip empty nodes
+
+    double centroidX = static_cast<double>(node.sumX) / node.area;
+    double centroidY = static_cast<double>(node.sumY) / node.area;
+
     for (const auto& box : boxes) {
+        // Check 1: Centroid inside bounding box (fast & effective)
         if (isInsideBoundingBox(centroidX, centroidY, box)) {
             return (box.classId == 0) ? "healthy" : "diseased";
         }
+
+        // Check 2: Relaxed overlap-based matching
+        double nodeRadius = sqrt(node.area / M_PI);  // Circular node approximation
+        double nodeX1 = centroidX - nodeRadius;
+        double nodeY1 = centroidY - nodeRadius;
+        double nodeX2 = centroidX + nodeRadius;
+        double nodeY2 = centroidY + nodeRadius;
+
+        bool xOverlap = (nodeX1 <= box.x_max) && (nodeX2 >= box.x_min);
+        bool yOverlap = (nodeY1 <= box.y_max) && (nodeY2 >= box.y_min);
+
+        if (xOverlap && yOverlap) {
+            double overlapX1 = std::max(nodeX1, (double)box.x_min);
+            double overlapY1 = std::max(nodeY1, (double)box.y_min);
+            double overlapX2 = std::min(nodeX2, (double)box.x_max);
+            double overlapY2 = std::min(nodeY2, (double)box.y_max);
+
+            double overlapArea = std::max(0.0, (overlapX2 - overlapX1)) * std::max(0.0, (overlapY2 - overlapY1));
+
+            double overlapRatio = overlapArea / node.area;
+
+            // Relaxed threshold: 1% overlap or absolute overlap > 50 pixels
+            if (overlapRatio > 0.01 || overlapArea > 50) {
+                return (box.classId == 0) ? "healthy" : "diseased";
+            }
+        }
     }
 
-    // If not inside any bounding box, label as background/dirt
-    return "none";
+    return "none";  // No matching bounding box found
+}
+
+std::vector<BoundingBox> BoundingBoxLabeler::getBoundingBoxes() {
+    return boundingBoxes_;
 }

@@ -2,11 +2,11 @@
 #define BSC_PROJECT_ALPHANODEFEATURES_HPP
 
 struct AlphaNodeFeatures{
-    double area;
-    double compactness;
-    double avgRed;
-    double avgGreen;
-    double avgBlue;
+    float area;
+    float compactness;
+    float avgRed;
+    float avgGreen;
+    float avgBlue;
 
     AlphaNodeFeatures():
         area(0),

@@ -144,7 +144,7 @@ void LVQClassifier::initializePrototypes(const std::vector<LVQTrainingPoint> &tr
 
 double LVQClassifier::calculateDistance(const std::vector<double> &point1, const std::vector<double> &point2) {
     double distance = 0.0;
-    for (int d = 0; d < point1.size(); d++) {
+    for (size_t d = 0; d < point1.size(); d++) {
         distance += std::pow(point1[d] - point2[d], 2);
     }
     return std::sqrt(distance);
@@ -156,7 +156,7 @@ int LVQClassifier::findClosestPrototype(const std::vector<double> &features) {
     double minDistance = std::numeric_limits<double>::max();
     int closestPrototypeIdx = -1;
 
-    for (int i = 0; i < prototypes_.size(); i++) {
+    for (size_t i = 0; i < prototypes_.size(); i++) {
         double distance = calculateDistance(features, prototypes_[i].weights);
         if (distance < minDistance) {
             minDistance = distance;
@@ -173,7 +173,7 @@ void LVQClassifier::updatePrototype(int prototypeIdx, const std::vector<double> 
     auto& prototype = prototypes_[prototypeIdx];
     double factor = moveTowards ? learningRate_ : -learningRate_;
 
-    for (int d = 0; d < prototype.weights.size(); d++) {
+    for (size_t d = 0; d < prototype.weights.size(); d++) {
         prototype.weights[d] += factor * (features[d] - prototype.weights[d]);
     }
 }
@@ -233,7 +233,7 @@ std::string LVQClassifier::predict(const AlphaNodeFeatures &features) {
     };
 
     //Normalize using training statistics
-    for (int i = 0; i < normalizedFeatures.size() && i < minVals_.size(); i++) {
+    for (size_t i = 0; i < normalizedFeatures.size() && i < minVals_.size(); i++) {
         if (maxVals_[i] != minVals_[i]) {
             normalizedFeatures[i] = (normalizedFeatures[i] - minVals_[i]) / (maxVals_[i] - minVals_[i]);
         } else {
@@ -288,7 +288,7 @@ double LVQClassifier::evaluateOnTestSet(const std::vector<AlphaNodeFeatures> &te
     int correct = 0;
     std::map<std::string, std::map<std::string, int>> confusionMatrix;
 
-    for (int i = 0; i < predictions.size(); i++) {
+    for (size_t i = 0; i < predictions.size(); i++) {
         confusionMatrix[testLabels[i]][predictions[i]]++;
         if (testLabels[i] == predictions[i]) correct++;
     }

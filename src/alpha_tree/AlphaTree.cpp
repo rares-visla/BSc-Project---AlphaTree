@@ -1,5 +1,5 @@
 #include "AlphaTree.hpp"
-#include "alpha_tree/queues/HHPQ.hpp"
+#include "queues/HHPQ.hpp"
 #include <cmath>
 
 #define RUN_FANCY_VIS_FOR_DEBUG 0
@@ -16,6 +16,31 @@ AlphaNode<Pixel>::AlphaNode(Pixel pixelVal, float alpha_, ImgIdx parentidx_)
 template <class Pixel>
 AlphaNode<Pixel>::AlphaNode(float alpha_, ImgIdx parentidx_)
     : area(0), alpha(alpha_), sumPix(0.0), minPix(0.0), maxPix(0.0), parentIdx(parentidx_), _rootIdx(ROOTIDX) {}
+
+template <class Pixel>
+AlphaNode<Pixel>::AlphaNode(Pixel pixelVal, float alpha_, ImgIdx x, ImgIdx y, Pixel r, Pixel g, Pixel b, ImgIdx parentidx_)
+    : area(1),
+      alpha(alpha_),
+      sumPix((float)pixelVal),
+      minPix(pixelVal),
+      maxPix(pixelVal),
+      parentIdx(parentidx_),
+      _rootIdx(ROOTIDX),
+      sumX(x),
+      sumY(y),
+      sumX2(x * x),
+      sumY2(y * y),
+      minX(x),
+      minY(y),
+      maxX(x),
+      maxY(y)
+{
+#if RGB_FILTER
+    rgb[0] = r;
+    rgb[1] = g;
+    rgb[2] = b;
+#endif
+}
 
 template <class Pixel> void AlphaTree<Pixel>::clear() {
     if (_node)
@@ -51,6 +76,12 @@ template <class Pixel> void AlphaNode<Pixel>::add(AlphaNode *q) {
     this->sumY += q->sumY;
     this->sumX2 += q->sumX2;
     this->sumY2 += q->sumY2;
+
+    // Merge bounding boxes
+    if (q->minX < this->minX) this->minX = q->minX;
+    if (q->minY < this->minY) this->minY = q->minY;
+    if (q->maxX > this->maxX) this->maxX = q->maxX;
+    if (q->maxY > this->maxY) this->maxY = q->maxY;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
@@ -69,6 +100,12 @@ template <class Pixel> void AlphaNode<Pixel>::add(const AlphaNode &q) {
     this->sumY += q.sumY;
     this->sumX2 += q.sumX2;
     this->sumY2 += q.sumY2;
+
+    // Merge bounding boxes:
+    if (q.minX < this->minX) this->minX = q.minX;
+    if (q.minY < this->minY) this->minY = q.minY;
+    if (q.maxX > this->maxX) this->maxX = q.maxX;
+    if (q.maxY > this->maxY) this->maxY = q.maxY;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::add(const Pixel &pix_val) {
@@ -100,6 +137,12 @@ template <class Pixel> void AlphaNode<Pixel>::addPixelWithCoords(const Pixel &pi
     this->sumY += y;
     this->sumX2 += x * x;
     this->sumY2 += y * y;
+
+    // Update bounding box
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
 }
 
 template <class Pixel> void AlphaNode<Pixel>::copy(AlphaNode *q) {
@@ -1950,6 +1993,9 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
     isAvailable = (uint8_t *)Malloc((size_t)(imgSize));
     set_isAvailable(isAvailable);
     _parentAry = (ImgIdx *)Malloc((size_t)imgSize * sizeof(int32_t));
+    printf("Requesting %zu nodes, %zu bytes per node, total %zu bytes\n",
+           _maxSize, sizeof(AlphaNode<Pixel>), _maxSize * sizeof(AlphaNode<Pixel>));
+
     _node = (AlphaNode<Pixel> *)Malloc((size_t)_maxSize * sizeof(AlphaNode<Pixel>));
 
     x0 = 0; /*arbitrary starting point*/
@@ -2025,6 +2071,12 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                 _node[iNode].rgb[0] = img[p];
                 _node[iNode].rgb[1] = img[p + imgSize];
                 _node[iNode].rgb[2] = img[p + 2*imgSize];
+
+                _node[iNode].minX = x;
+                _node[iNode].minY = y;
+                _node[iNode].maxX = x;
+                _node[iNode].maxY = y;
+
                 _node[iNode].parentIdx = stackTop;
                 _node[iNode]._rootIdx = ROOTIDX;
                 stackTop = iNode;
@@ -2052,6 +2104,11 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHeapQueue(const Pixel *img) {
                     _node[iNode].rgb[0] = img[p];
                     _node[iNode].rgb[1] = img[p + imgSize];
                     _node[iNode].rgb[2] = img[p + 2*imgSize];
+
+                    _node[iNode].minX = x;
+                    _node[iNode].minY = y;
+                    _node[iNode].maxX = x;
+                    _node[iNode].maxY = y;
 
                     _node[stackTop].add(_node + iNode);
                     _node[iNode].parentIdx = stackTop;
@@ -2622,6 +2679,8 @@ template <class Pixel> void AlphaTree<Pixel>::FloodHierarHeapQueue(const Pixel *
     _maxSize = 1 + imgSize + dimgSize;
     _parentAry = (ImgIdx *)Malloc((size_t)imgSize * sizeof(ImgIdx));
     memset(_parentAry, ROOTIDX, imgSize * sizeof(ImgIdx));
+    printf("Requesting %d nodes, %zu bytes per node, total %zu bytes\n",
+           _maxSize, sizeof(AlphaNode<Pixel>), _maxSize * sizeof(AlphaNode<Pixel>));
     _node = (AlphaNode<Pixel> *)Malloc((size_t)_maxSize * sizeof(AlphaNode<Pixel>));
 
     ImgIdx startingPixel = 0;
@@ -2726,48 +2785,62 @@ void AlphaTree<Pixel>::runFloodHHPQ(ImgIdx startingPixel, const Pixel *img, floa
                 //?
             }
 
+            const ImgIdx x = p % _width;
+            const ImgIdx y = p / _width;
+            Pixel red = 0, green = 0, blue = 0;
+#if RGB_FILTER
+            red = img[p];
+            green = img[p + imgSize];
+            blue = img[p + 2 * imgSize];
+#endif
+
             if (currentLevel > queue->front().alpha) // go to lower level
             {
                 currentLevel = queue->front().alpha;
                 const ImgIdx newNodeIdx = _curSize++;
-                _node[newNodeIdx] = AlphaNode<Pixel>(img[p], queue->front().alpha, stackTop);
-#if RGB_FILTER
-                _node[newNodeIdx].rgb[0] = img[p];
-                _node[newNodeIdx].rgb[1] = img[p + imgSize];
-                _node[newNodeIdx].rgb[2] = img[p + 2 * imgSize];
-#endif
+//                _node[newNodeIdx] = AlphaNode<Pixel>(img[p], queue->front().alpha, stackTop);
+//#if RGB_FILTER
+//                _node[newNodeIdx].rgb[0] = img[p];
+//                _node[newNodeIdx].rgb[1] = img[p + imgSize];
+//                _node[newNodeIdx].rgb[2] = img[p + 2 * imgSize];
+//#endif
+                _node[newNodeIdx] = AlphaNode<Pixel>(img[p], queue->front().alpha, x, y, red, green, blue, stackTop);
                 prevTop = stackTop;
                 stackTop = newNodeIdx;
 
                 if (currentLevel > 0) {
                     const ImgIdx singletonNodeIdx = _curSize++;
-                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, newNodeIdx);
-#if RGB_FILTER
-                    _node[singletonNodeIdx].rgb[0] = img[p];
-                    _node[singletonNodeIdx].rgb[1] = img[p + imgSize];
-                    _node[singletonNodeIdx].rgb[2] = img[p + 2 * imgSize];
-#endif
+//                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, newNodeIdx);
+//#if RGB_FILTER
+//                    _node[singletonNodeIdx].rgb[0] = img[p];
+//                    _node[singletonNodeIdx].rgb[1] = img[p + imgSize];
+//                    _node[singletonNodeIdx].rgb[2] = img[p + 2 * imgSize];
+//#endif
+                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, x, y, red, green, blue, newNodeIdx);
                     _parentAry[p] = singletonNodeIdx;
                 } else
                     _parentAry[p] = stackTop;
             } else {
                 if (currentLevel > 0) {
                     const ImgIdx singletonNodeIdx = _curSize++;
-                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, stackTop);
-#if RGB_FILTER
-                    _node[singletonNodeIdx].rgb[0] = img[p];
-                    _node[singletonNodeIdx].rgb[1] = img[p + imgSize];
-                    _node[singletonNodeIdx].rgb[2] = img[p + 2 * imgSize];
-#endif
+//                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, stackTop);
+//#if RGB_FILTER
+//                    _node[singletonNodeIdx].rgb[0] = img[p];
+//                    _node[singletonNodeIdx].rgb[1] = img[p + imgSize];
+//                    _node[singletonNodeIdx].rgb[2] = img[p + 2 * imgSize];
+//#endif
+                    _node[singletonNodeIdx] = AlphaNode<Pixel>(img[p], 0.0, x, y, red, green, blue, stackTop);
                     _node[stackTop].add(_node[singletonNodeIdx]);
                     _parentAry[p] = singletonNodeIdx;
                 } else {
-                    connectPix2Node(p, img[p], stackTop);
-#if RGB_FILTER
-                    _node[stackTop].rgb[0] += img[p];
-                    _node[stackTop].rgb[1] += img[p + imgSize];
-                    _node[stackTop].rgb[2] += img[p + 2 * imgSize];
-#endif
+                    connectPix2NodeWithCoords(img, p, img[p], stackTop);
+//                    connectPix2Node(p, img[p], stackTop);
+//                    _node[stackTop].addPixelWithCoords(img[p], x, y);
+//#if RGB_FILTER
+//                    _node[stackTop].rgb[0] += img[p];
+//                    _node[stackTop].rgb[1] += img[p + imgSize];
+//                    _node[stackTop].rgb[2] += img[p + 2 * imgSize];
+//#endif
                 }
                 if (_node[stackTop].area == imgSize)
                     break;
