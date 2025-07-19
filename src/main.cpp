@@ -128,43 +128,48 @@ int main(int argc, char **argv) {
     std::cout << "  Background/None: " << noneCount << " ("
               << (100.0 * noneCount / nodeLabels.size()) << "%)" << std::endl;
 
-    // Convert your image8 vector to cv::Mat
-    cv::Mat visImg(height, width, CV_8UC1, image8.data());
-    cv::Mat colorImg;
-    cv::cvtColor(visImg, colorImg, cv::COLOR_GRAY2BGR);
+    LVQClassifier classifier(2, 0.1, 0.95, 100);
+    int folds = 5;
+    double avgAccuracy = classifier.crossValidate(featureVectors, nodeLabels, folds, LVQClassifier::LVQType::LVQ1);
+    std::cout << "Average accuracy over " << folds << " folds: " << avgAccuracy * 100.0 << "%" << std::endl;
 
-//    int minsize = 10000;
-//    int maxsize = 100000;
-    // Draw colored bounding boxes for filtered nodes
-    for (size_t idx = 0; idx < featureVectors.size(); ++idx) {
-        const auto& features = featureVectors[idx];
-        const std::string& label = nodeLabels[idx];
-        const auto& node = tree._node[featureIdxToNodeIdx[idx]]; // Get the corresponding node
+//    // Convert your image8 vector to cv::Mat
+//    cv::Mat visImg(height, width, CV_8UC1, image8.data());
+//    cv::Mat colorImg;
+//    cv::cvtColor(visImg, colorImg, cv::COLOR_GRAY2BGR);
+//
+////    int minsize = 10000;
+////    int maxsize = 100000;
+//    // Draw colored bounding boxes for filtered nodes
+//    for (size_t idx = 0; idx < featureVectors.size(); ++idx) {
+//        const auto& features = featureVectors[idx];
+//        const std::string& label = nodeLabels[idx];
+//        const auto& node = tree._node[featureIdxToNodeIdx[idx]]; // Get the corresponding node
+//
+//        int minX = node.minX;
+//        int minY = node.minY;
+//        int maxX = node.maxX;
+//        int maxY = node.maxY;
+//
+//        cv::Scalar color;
+//        if (label == "healthy")
+//            color = cv::Scalar(0, 255, 0); // Green
+//        else if (label == "diseased")
+//            color = cv::Scalar(0, 0, 255); // Red
+//        else
+//            color = cv::Scalar(255, 0, 0); // Blue
+//
+//        cv::rectangle(
+//            colorImg,
+//            cv::Point(minX, minY),
+//            cv::Point(maxX, maxY),
+//            color,
+//            2
+//        );
+//    }
 
-        int minX = node.minX;
-        int minY = node.minY;
-        int maxX = node.maxX;
-        int maxY = node.maxY;
-
-        cv::Scalar color;
-        if (label == "healthy")
-            color = cv::Scalar(0, 255, 0); // Green
-        else if (label == "diseased")
-            color = cv::Scalar(0, 0, 255); // Red
-        else
-            color = cv::Scalar(255, 0, 0); // Blue
-
-        cv::rectangle(
-            colorImg,
-            cv::Point(minX, minY),
-            cv::Point(maxX, maxY),
-            color,
-            2
-        );
-    }
-
-    std::string outputFileName = "nodes_bounding_boxes_labeled_0.3_IoU.png";
-    cv::imwrite(outputFileName, colorImg);
+//    std::string outputFileName = "nodes_bounding_boxes_labeled_0.3_IoU.png";
+//    cv::imwrite(outputFileName, colorImg);
 
     if (!runtimes.empty()) {
         double minRuntime = *std::min_element(runtimes.begin(), runtimes.end());

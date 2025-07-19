@@ -14,6 +14,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iomanip>
+#include <numeric>
 #include "../../feature_extraction/AlphaNodeFeatures.hpp"
 
 struct LVQPrototype {
@@ -69,7 +70,7 @@ class LVQClassifier {
     double calculateDistance(const std::vector<double>& point1, const std::vector<double>& point2);
     int findClosestPrototype(const std::vector<double>& features);
     void updatePrototype(int prototypeIdx, const std::vector<double>& features, bool moveTowards);
-    double calculateAccuracy(const std::vector<LVQTrainingPoint>& testData);
+    double calculateAccuracy(const std::vector<std::string>& predicted, const std::vector<std::string>& actual);
 
     // Statistics tracking
     std::vector<double> minVals_, maxVals_;

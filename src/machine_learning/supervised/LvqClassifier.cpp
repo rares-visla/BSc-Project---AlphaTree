@@ -54,7 +54,7 @@ void LVQClassifier::train(const std::vector<LVQTrainingPoint> &trainingData, LVQ
         std::cout << "  " << pair.first << " (ID: " << pair.second << ")" << std::endl;
     }
 
-    // Initialize codebooks
+    // Initialize prototypes
     initializePrototypes(normalizedData);
 
     // Train using selected algorithm
@@ -314,4 +314,44 @@ double LVQClassifier::evaluateOnTestSet(const std::vector<AlphaNodeFeatures> &te
     std::cout << "========================\n" << std::endl;
 
     return accuracy;
+}
+double LVQClassifier::calculateAccuracy(const std::vector<std::string> &predicted,
+                                        const std::vector<std::string> &actual) {
+    int correct = 0;
+    for (size_t i = 0; i < predicted.size(); ++i) {
+        if (predicted[i] == actual[i]) correct++;
+    }
+    return static_cast<double>(correct) / predicted.size();
+}
+
+double LVQClassifier::crossValidate(const std::vector<AlphaNodeFeatures> &features,
+                                    const std::vector<std::string> &labels,
+                                    int folds, LVQClassifier::LVQType algorithm) {
+    int n = features.size();
+    std::vector<int> indices(n);
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), rng_);
+
+    double totalAccuracy = 0.0;
+    for (int fold = 0; fold < folds; ++fold) {
+        std::vector<AlphaNodeFeatures> trainFeatures, testFeatures;
+        std::vector<std::string> trainLabels, testLabels;
+
+        for (int i = 0; i < n; ++i) {
+            if (i % folds == fold) {
+                testFeatures.push_back(features[indices[i]]);
+                testLabels.push_back(labels[indices[i]]);
+            } else {
+                trainFeatures.push_back(features[indices[i]]);
+                trainLabels.push_back(labels[indices[i]]);
+            }
+        }
+
+        LVQClassifier temp(*this); // Copy current classifier with same params
+        temp.train(trainFeatures, trainLabels, algorithm);
+        auto predicted = temp.predict(testFeatures);
+        double acc = calculateAccuracy(predicted, testLabels);
+        totalAccuracy += acc;
+    }
+    return totalAccuracy / folds;
 }

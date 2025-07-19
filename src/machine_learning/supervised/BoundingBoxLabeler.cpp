@@ -167,16 +167,16 @@ std::string BoundingBoxLabeler::assignLabel(const AlphaTree<uint8_t>& tree, int 
         }
 
 //        //Check 2: bounding box overlap
-//        double overlapArea = overlap(node, box);
-//        if (overlapArea / node.area > 0.5) {
-//            return (box.classId == 0) ? "healthy" : "diseased";
-//        }
-
-        //Check 3: IoU
-        double iou = IoU(node, box);
-        if (iou > 0.3) {
+        double overlapArea = overlap(node, box);
+        if (overlapArea / node.area > 0.5) {
             return (box.classId == 0) ? "healthy" : "diseased";
         }
+
+        //Check 3: IoU
+//        double iou = IoU(node, box);
+//        if (iou > 0.2) {
+//            return (box.classId == 0) ? "healthy" : "diseased";
+//        }
     }
 
     return "none";  // No matching bounding box found
