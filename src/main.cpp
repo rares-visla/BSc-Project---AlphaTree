@@ -6,6 +6,7 @@
 #include "alpha_tree/image_handling/RandGenImage.hpp"
 #include "feature_extraction/FeatureComputer.hpp"
 #include "machine_learning/supervised/BoundingBoxLabeler.hpp"
+#include "machine_learning/supervised/GmlvqClassifier.hpp"
 #include "machine_learning/supervised/LvqClassifier.hpp"
 #include <filesystem>
 
@@ -128,10 +129,25 @@ int main(int argc, char **argv) {
     std::cout << "  Background/None: " << noneCount << " ("
               << (100.0 * noneCount / nodeLabels.size()) << "%)" << std::endl;
 
-    LVQClassifier classifier(2, 0.1, 0.95, 100);
+    std::ofstream out("nodes_features.csv");
+    out << "area,compactness,avgRed,avgGreen,avgBlue,label\n";
+    for (size_t i = 0; i < featureVectors.size(); ++i) {
+        const auto& f = featureVectors[i];
+        out << f.area << "," << f.compactness << "," << f.avgRed << ","
+            << f.avgGreen << "," << f.avgBlue << "," << nodeLabels[i] << "\n";
+    }
+    out.close();
+
+//    LVQClassifier classifier(2, 0.1, 0.95, 100);
+//    int folds = 5;
+//    double avgAccuracy = classifier.crossValidate(featureVectors, nodeLabels, folds, LVQClassifier::LVQType::LVQ1);
+//    std::cout << "Average accuracy over " << folds << " folds: " << avgAccuracy * 100.0 << "%" << std::endl;
+
+    GMLVQClassifier gmlvq(1, 0.05, 0.01, 100); // 1 prototype/class, proto LR=0.05, matrix LR=0.01, 100 epochs
     int folds = 5;
-    double avgAccuracy = classifier.crossValidate(featureVectors, nodeLabels, folds, LVQClassifier::LVQType::LVQ1);
-    std::cout << "Average accuracy over " << folds << " folds: " << avgAccuracy * 100.0 << "%" << std::endl;
+    double avgAccuracy = gmlvq.crossValidate(featureVectors, nodeLabels, folds);
+    std::cout << "GMLVQ average accuracy over " << folds << " folds: " << avgAccuracy * 100.0 << "%" << std::endl;
+
 
 //    // Convert your image8 vector to cv::Mat
 //    cv::Mat visImg(height, width, CV_8UC1, image8.data());

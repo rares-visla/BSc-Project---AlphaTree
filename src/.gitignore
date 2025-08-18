@@ -6,3 +6,5 @@
 *.out
 makefile
 AlphaTree
+venv
+.vscode
